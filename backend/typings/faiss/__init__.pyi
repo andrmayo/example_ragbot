@@ -1,0 +1,9 @@
+import numpy as np
+from numpy.typing import NDArray
+
+class IndexFlatL2:
+    def __init__(self, d: int) -> None: ...
+    def add(self, x: NDArray[np.float32]) -> None: ...
+    def search(
+        self, x: NDArray[np.float32], k: int
+    ) -> tuple[NDArray[np.float32], NDArray[np.int64]]: ...
