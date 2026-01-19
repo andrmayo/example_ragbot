@@ -15,12 +15,12 @@ and uses an LLM and RAG to answer queries an LLM about the resume.
 
 ## Implementation
 
-- Backend: located in ./backend/. RAG is implemented directly without very high
-  level tools like LangChain (for now). The first focus is the Python backend,
+- backend: located in ./backend/. RAG is implemented directly without very high
+  level tools like LangChain (for now). The main focus is the Python backend,
   which is ./backend/ and uses src layout, and to get extraction, LLM api-calls,
-  and RAG working for resumes in doc/docx format.
-- Frontend: located in ./frontend/. Will be a React frontend, preferably using
-  TypeScript.
+  and RAG working for resumes in pdf format. More info in backend/README.md.
+- frontend: located in ./frontend/. Will be a React frontend using TypeScript.
+  CSS is managed with Tailwind.
 
 ## Bash commands
 

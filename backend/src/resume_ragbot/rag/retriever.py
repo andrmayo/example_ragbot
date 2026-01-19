@@ -37,3 +37,27 @@ class Retriever:
         _, indices = self.index.search(query_embedding, k)
 
         return [self.chunks[i] for i in indices[0]]
+
+    def clear(self) -> None:
+        """Clear the index and chunks."""
+        self.index = None
+        self.chunks = []
+
+    def remove_source(self, source: str) -> int:
+        """
+        Remove all chunks from a specific source and returns number removed.
+        This is slow because index has to be rebuilt whenever it gets called.
+        """
+        original_count = len(self.chunks)
+        self.chunks = [c for c in self.chunks if c.source != source]
+        removed = original_count - len(self.chunks)
+
+        if removed > 0 and self.chunks:
+            # Rebuild index
+            embeddings = self.embedder.embed_batch([c.text for c in self.chunks])
+            self.index = faiss.IndexFlatL2(self.embedder.dimension)
+            self.index.add(embeddings)
+        elif not self.chunks:
+            self.index = None
+
+        return removed
