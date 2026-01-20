@@ -5,7 +5,7 @@ from tempfile import NamedTemporaryFile
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from resume_ragbot.config import LLMProvider
+from resume_ragbot.config import LLMProvider, settings
 from resume_ragbot.extraction.extractors import EXTRACTORS
 from resume_ragbot.llm import get_client
 from resume_ragbot.llm.base import Message
@@ -116,7 +116,9 @@ async def upload_resumes(
 @router.post("/ask")
 async def ask_question(request: QuestionRequest) -> AnswerResponse:
     """Ask a question about uploaded resumes."""
-    relevant_chunks = retrievers[request.collection].search(request.question, k=3)
+    relevant_chunks = retrievers[request.collection].search(
+        request.question, k=settings.k_chunks
+    )
 
     if not relevant_chunks:
         return AnswerResponse(

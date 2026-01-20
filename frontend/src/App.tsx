@@ -4,13 +4,22 @@ import { ChatInput } from "./components/ChatInput";
 import { FileUpload } from "./components/FileUpload";
 import { CollectionSelect } from "./components/CollectionSelect";
 import { useChat } from "./hooks/useChat";
-import { uploadResumes, getCollections } from "./api/client";
+import {
+  uploadResumes,
+  getCollections,
+  clearCollection,
+  clearAll,
+  removeResume,
+} from "./api/client";
 
 function App() {
   const [collection, setCollection] = useState("default");
   const [collections, setCollections] = useState<string[]>(["default"]);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [newCollection, setNewCollection] = useState("");
+  const [collectionToDelete, setCollectionToDelete] = useState("default");
+  const [resumeToDelete, setResumeToDelete] = useState("");
 
   const { messages, loading, error, ask, clearMessages } = useChat(collection);
 
@@ -42,10 +51,52 @@ function App() {
     }
   };
 
+  const handleDeleteResume = async () => {
+    if (!resumeToDelete) return;
+    try {
+      await removeResume(collection, resumeToDelete);
+      setUploadedFiles((prev) => prev.filter((f) => f !== resumeToDelete));
+      setResumeToDelete("");
+    } catch (e) {
+      console.error("Failed to delete resume:", e);
+    }
+  };
+
   const handleCollectionChange = (newCollection: string) => {
     setCollection(newCollection);
     setUploadedFiles([]);
     clearMessages();
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!collectionToDelete) return;
+    try {
+      await clearCollection(collectionToDelete);
+      const res = await getCollections();
+      setCollections(
+        res.collections.length > 0 ? res.collections : ["default"],
+      );
+      if (collection === collectionToDelete) {
+        setCollection("default");
+        setUploadedFiles([]);
+        clearMessages();
+      }
+    } catch (e) {
+      console.error("Failed to delete collection:", e);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!collectionToDelete) return;
+    try {
+      await clearAll();
+      setCollections(["default"]);
+      setCollection("default");
+      setUploadedFiles([]);
+      clearMessages();
+    } catch (e) {
+      console.error("Failed to delete all:", e);
+    }
   };
 
   return (
@@ -63,8 +114,65 @@ function App() {
             selected={collection}
             onSelect={handleCollectionChange}
           />
+          {/* Select a collection */}
+          <div className="flex gap-2 mt-2">
+            <input
+              type="text"
+              value={newCollection}
+              onChange={(e) => setNewCollection(e.target.value)}
+              placeholder="New collection name"
+              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+            />
+            {/* Add a collection */}
+            <button
+              onClick={() => {
+                if (newCollection.trim()) {
+                  setCollections((prev) => [...prev, newCollection.trim()]);
+                  setCollection(newCollection.trim());
+                  setNewCollection("");
+                  setUploadedFiles([]);
+                  clearMessages();
+                }
+              }}
+              className="px-2 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+            >
+              Add
+            </button>
+          </div>
+          {/* Delete a collection */}
+          <div className="mt-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Delete Collection
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={collectionToDelete}
+                onChange={(e) => setCollectionToDelete(e.target.value)}
+                className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+              >
+                {collections.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleDeleteCollection}
+                className="px-2 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+              >
+                Delete
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                className="px-2 py-1 text-sm bg-rd-100 text-red-700 rounded hover:bg-red-200"
+              >
+                All
+              </button>
+            </div>
+          </div>
         </div>
 
+        {/*Upload files*/}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Upload Resumes
@@ -72,6 +180,7 @@ function App() {
           <FileUpload onUpload={handleUpload} disabled={uploading} />
         </div>
 
+        {/*Delete file*/}
         {uploadedFiles.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -84,6 +193,49 @@ function App() {
                 </li>
               ))}
             </ul>
+            <button
+              onClick={async () => {
+                try {
+                  await clearCollection(collection);
+                  setUploadedFiles([]);
+                  clearMessages();
+                } catch (e) {
+                  console.error("Failed to clear resumes:", e);
+                }
+              }}
+              className="px-2 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+            >
+              Delete All
+            </button>
+          </div>
+        )}
+
+        {uploadedFiles.length > 0 && (
+          <div className="mt-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Delete Resume
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={resumeToDelete}
+                onChange={(e) => setResumeToDelete(e.target.value)}
+                className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
+              >
+                <option value="">Select...</option>
+                {uploadedFiles.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleDeleteResume}
+                disabled={!resumeToDelete}
+                className="px-2 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         )}
       </div>

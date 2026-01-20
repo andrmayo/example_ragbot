@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     google_model: str = "gemini-2.0-flash"
     default_temp: float = Field(default=0.7, ge=0, le=2)
     default_embedding_model: str = "all-MiniLM-L6-v2"
+    k_chunks: int = 15
 
 
 # NOTE: "all-MiniLM-L6-v2" for sentence_transformer, good balance between speed and quality

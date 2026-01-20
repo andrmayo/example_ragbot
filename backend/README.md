@@ -35,21 +35,11 @@ backend/
 │       │   ├── retriever.py     # Vector search/retrieval
 │       │   └── prompts.py       # Prompt templates
 │       │
-│       ├── llm/                 # LLM integration
-│       │   ├── __init__.py
-│       │   ├── client.py        # API client wrapper
-│       │   └── models.py        # Request/response models
-│       │
-│       ├── storage/             # Persistence
-│       │   ├── __init__.py
-│       │   ├── vector_store.py  # Vector DB interface
-│       │   └── document_store.py# Raw document storage
-│       │
-│       └── models/              # Domain models (Pydantic)
+│       └── llm/                 # LLM integration
 │           ├── __init__.py
-│           ├── document.py
-│           ├── chunk.py
-│           └── chat.py
+│           ├── client.py        # API client wrapper
+│           └── models.py        # Request/response models
+│
 │
 ├── tests/
 │   ├── conftest.py
@@ -62,6 +52,24 @@ backend/
 │
 ├── pyproject.toml
 └── README.md
+```
+
+## Some useful expansions
+
+```
+backend/
+├── src/
+│   └── resume_ragbot/
+│       ├── storage/             # Persistence
+│       │   ├── __init__.py
+│       │   ├── vector_store.py  # Vector DB interface
+│       │   └── document_store.py# Raw document storage
+│       │
+│       └── models/              # Domain models (Pydantic)
+│           ├── __init__.py
+│           ├── document.py
+│           ├── chunk.py
+│           └── chat.py
 ```
 
 ## Module Overview

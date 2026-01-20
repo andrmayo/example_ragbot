@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { askQuestion, AnswerResponse } from "../api/client";
+import { askQuestion, type AnswerResponse } from "../api/client";
 
 export interface Message {
   role: "user" | "assistant";
