@@ -16,8 +16,10 @@ class Embedder:
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text string."""
-        return self.model.encode(text, convert_to_numpy=True)
+        return self.model.encode(text, normalize_embeddings=True, convert_to_numpy=True)
 
     def embed_batch(self, texts: list[str]) -> np.ndarray:
         """Embed multiple texts at once."""
-        return self.model.encode(texts, convert_to_numpy=True)
+        return self.model.encode(
+            texts, normalize_embeddings=True, convert_to_numpy=True
+        )
