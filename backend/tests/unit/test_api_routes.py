@@ -46,7 +46,9 @@ def test_ask_without_upload(client: TestClient):
 def test_ask_with_resume(mock_get_client: MagicMock, client: TestClient, sample_pdf):
     # Setup mock
     mock_llm = MagicMock()
-    mock_llm.complete.return_value = MagicMock(content="Mocked answer")
+    mock_llm.complete.return_value = MagicMock(
+        content='{"answer": "Mocked answer", "sources_used": ["resume.pdf"]}'
+    )
     mock_get_client.return_value = mock_llm
 
     # Upload

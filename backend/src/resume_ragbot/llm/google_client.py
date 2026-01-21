@@ -2,7 +2,7 @@ from google import genai
 from google.genai import types
 
 from resume_ragbot.config import settings
-from resume_ragbot.llm.base import LLMClient, LLMResponse, Message
+from resume_ragbot.llm.base import LLMClient, LLMResponse, InputMessage
 
 
 class GoogleClient(LLMClient):
@@ -11,7 +11,7 @@ class GoogleClient(LLMClient):
         self.model = model or settings.google_model
         self.client = genai.Client(api_key=self.api_key)
 
-    def _convert_messages(self, messages: list[Message]) -> list[types.Content]:
+    def _convert_messages(self, messages: list[InputMessage]) -> list[types.Content]:
         return [
             types.Content(
                 role="user" if m.role == "user" else "model",
@@ -22,7 +22,7 @@ class GoogleClient(LLMClient):
 
     def complete(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         temperature: float = settings.default_temp,
         system: str | None = None,
         max_tokens: int = 1024,
@@ -51,7 +51,7 @@ class GoogleClient(LLMClient):
 
     async def complete_async(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         temperature: float = settings.default_temp,
         system: str | None = None,
         max_tokens: int = 1024,

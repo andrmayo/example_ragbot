@@ -29,10 +29,10 @@ build-backend = "hatchling.build"
 packages = ["src/resume_ragbot"]
 
 [dependency-groups]
-dev = ["ipython>=9.9.0", "pytest>=9.0.2"]
+dev = ["ipython>=9.9.0", "pyright>=1.1.408", "pytest>=9.0.2"]
 
 [tool.pyright]
-stubsPath = ["typings"]
+stubPath = "typings"
 
 [tool.pytest.ini_options]
 filterwarnings = ["ignore:builtin type Swig:DeprecationWarning"]

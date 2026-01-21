@@ -8,7 +8,7 @@ roles = Literal["user", "assistant"]
 
 
 @dataclass
-class Message:
+class InputMessage:
     role: roles
     content: str
 
@@ -27,7 +27,7 @@ class LLMClient(ABC):
     @abstractmethod
     def complete(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         temperature: float = settings.default_temp,
         system: str | None = None,
         max_tokens: int = 1024,
@@ -38,7 +38,7 @@ class LLMClient(ABC):
     @abstractmethod
     async def complete_async(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         temperature: float,
         system: str | None = None,
         max_tokens: int = 1024,

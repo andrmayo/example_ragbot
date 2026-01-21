@@ -7,7 +7,7 @@ from openai.types.chat import (
 )
 
 from resume_ragbot.config import settings
-from resume_ragbot.llm.base import LLMClient, LLMResponse, Message
+from resume_ragbot.llm.base import LLMClient, LLMResponse, InputMessage
 
 
 class OpenAIClient(LLMClient):
@@ -19,7 +19,7 @@ class OpenAIClient(LLMClient):
 
     def _convert_messages(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         system: str | None = None,
     ) -> list[ChatCompletionMessageParam]:
         result: list[ChatCompletionMessageParam] = []
@@ -45,7 +45,7 @@ class OpenAIClient(LLMClient):
 
     def complete(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         temperature: float = settings.default_temp,
         system: str | None = None,
         max_tokens: int = 1024,
@@ -69,7 +69,7 @@ class OpenAIClient(LLMClient):
 
     async def complete_async(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         temperature: float = settings.default_temp,
         system: str | None = None,
         max_tokens: int = 1024,

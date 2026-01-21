@@ -3,7 +3,7 @@ from typing import Any
 import anthropic
 
 from resume_ragbot.config import settings
-from resume_ragbot.llm.base import LLMClient, LLMResponse, Message
+from resume_ragbot.llm.base import LLMClient, LLMResponse, InputMessage
 
 
 class AnthropicClient(LLMClient):
@@ -15,13 +15,13 @@ class AnthropicClient(LLMClient):
         self.async_client = anthropic.AsyncAnthropic(api_key=self.api_key)
 
     def _convert_messages(
-        self, messages: list[Message]
+        self, messages: list[InputMessage]
     ) -> list[anthropic.types.MessageParam]:
         return [{"role": m.role, "content": m.content} for m in messages]
 
     def complete(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         temperature: float = settings.default_temp,
         system: str | None = None,
         max_tokens: int = 1024,
@@ -36,9 +36,9 @@ class AnthropicClient(LLMClient):
             kwargs["system"] = system
 
         response = self.client.messages.create(**kwargs)
-        text = ""
-        if response.content and response.content[0].type == "text":
-            text = response.content[0].text
+        text = "".join(
+            block.text for block in response.content or [] if block.type == "text"
+        )
 
         return LLMResponse(
             content=text,
@@ -49,7 +49,7 @@ class AnthropicClient(LLMClient):
 
     async def complete_async(
         self,
-        messages: list[Message],
+        messages: list[InputMessage],
         temperature: float = settings.default_temp,
         system: str | None = None,
         max_tokens: int = 1024,

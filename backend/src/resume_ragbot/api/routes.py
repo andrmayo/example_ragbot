@@ -1,4 +1,5 @@
 from collections import defaultdict
+import json
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -8,7 +9,7 @@ from pydantic import BaseModel
 from resume_ragbot.config import LLMProvider, settings
 from resume_ragbot.extraction.extractors import EXTRACTORS
 from resume_ragbot.llm import get_client
-from resume_ragbot.llm.base import Message
+from resume_ragbot.llm.base import InputMessage
 from resume_ragbot.rag.chunking import chunk_text
 from resume_ragbot.rag.prompts import SYSTEM_PROMPT, build_qa_prompt
 from resume_ragbot.rag.retriever import Retriever
@@ -125,17 +126,38 @@ async def ask_question(request: QuestionRequest) -> AnswerResponse:
             answer="No resume content has been uploaded yet.", sources=[]
         )
 
-    sources = list(set(c.source for c in relevant_chunks))
-
     prompt = build_qa_prompt(request.question, relevant_chunks)
 
     client = get_client(provider=request.provider, model=request.model)
     response = client.complete(
-        messages=[Message(role="user", content=prompt)],
+        messages=[InputMessage(role="user", content=prompt)],
         system=SYSTEM_PROMPT,
     )
 
-    return AnswerResponse(answer=response.content, sources=sources)
+    sources = set(c.source for c in relevant_chunks)
+
+    try:
+        response_dict: dict = json.loads(response.content)
+        try:
+            answer_text = response_dict["answer"]
+        except KeyError:
+            answer_text = (
+                f"Warning: model did not return correct keys.\n\n{response.content}"
+            )
+        try:
+            relevant_sources = response_dict["sources_used"]
+            relevant_sources = [
+                source for source in relevant_sources if source in sources
+            ]
+        except KeyError:
+            relevant_sources = list(sources)
+    except json.JSONDecodeError:
+        answer_text = (
+            f"Unable to parse answer, so displaying raw response:\n\n{response.content}"
+        )
+        relevant_sources = list(sources)
+
+    return AnswerResponse(answer=answer_text, sources=relevant_sources)
 
 
 @router.delete("/clear/{collection}")

@@ -8,7 +8,7 @@ from resume_ragbot.rag.chunking import chunk_text
 from resume_ragbot.rag.prompts import build_qa_prompt, SYSTEM_PROMPT
 from resume_ragbot.extraction.extractors import EXTRACTORS
 from resume_ragbot.llm import get_client
-from resume_ragbot.llm.base import Message
+from resume_ragbot.llm.base import InputMessage
 
 from .cases import EVAL_CASES, EvalCase
 from .metrics import source_recall, keyword_recall
@@ -37,7 +37,7 @@ def run_case(case: EvalCase, retriever: Retriever, client) -> dict:
     # Generate answer
     prompt = build_qa_prompt(case.question, chunks)
     response = client.complete(
-        messages=[Message(role="user", content=prompt)],
+        messages=[InputMessage(role="user", content=prompt)],
         system=SYSTEM_PROMPT,
     )
 
