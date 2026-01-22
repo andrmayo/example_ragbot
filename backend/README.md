@@ -15,100 +15,96 @@ backend/
 │       │
 │       ├── api/                 # HTTP layer
 │       │   ├── __init__.py
-│       │   ├── routes/
-│       │   │   ├── __init__.py
-│       │   │   ├── chat.py      # Chat/query endpoints
-│       │   │   └── documents.py # Resume upload endpoints
-│       │   └── deps.py          # Dependency injection
+│       │   └── routes.py        # All API endpoints (upload, ask, clear, etc.)
 │       │
 │       ├── extraction/          # Document parsing
 │       │   ├── __init__.py
-│       │   ├── base.py          # Extractor interface
-│       │   ├── docx.py          # .docx extraction
-│       │   ├── pdf.py           # PDF extraction
-│       │   └── plaintext.py     # .txt extraction
+│       │   ├── base.py          # Extractor interface & ExtractedDocument
+│       │   └── extractors.py    # PDF, DOCX, ODT, plaintext extractors
 │       │
 │       ├── rag/                 # RAG pipeline
 │       │   ├── __init__.py
-│       │   ├── chunking.py      # Text chunking strategies
-│       │   ├── embeddings.py    # Embedding generation
-│       │   ├── retriever.py     # Vector search/retrieval
-│       │   └── prompts.py       # Prompt templates
+│       │   ├── chunking.py      # Text chunking with overlap
+│       │   ├── embedding.py     # Embedding generation (sentence-transformers)
+│       │   ├── retriever.py     # FAISS vector search/retrieval
+│       │   └── prompts.py       # System prompt and QA prompt builder
 │       │
 │       └── llm/                 # LLM integration
-│           ├── __init__.py
-│           ├── client.py        # API client wrapper
-│           └── models.py        # Request/response models
-│
+│           ├── __init__.py      # get_client() factory function
+│           ├── base.py          # LLMClient ABC, Message, LLMResponse
+│           ├── anthropic_client.py
+│           ├── openai_client.py
+│           └── google_client.py
 │
 ├── tests/
-│   ├── conftest.py
-│   ├── test_extraction/
-│   ├── test_rag/
-│   └── eval/                    # Eval harness
-│       ├── __init__.py
-│       ├── datasets/            # Test Q&A pairs
-│       └── runner.py            # Evaluation orchestrator
+│   ├── unit/                    # Unit tests (pytest)
+│   │   ├── conftest.py          # Fixtures for tests
+│   │   ├── test_api_routes.py
+│   │   └── test_extraction.py
+│   ├── eval/                    # Eval harness (standalone)
+│   │   ├── __init__.py
+│   │   ├── cases.py             # Test case definitions
+│   │   ├── metrics.py           # Scoring functions
+│   │   └── runner.py            # Evaluation orchestrator
+│   └── fixtures/                # Test resume files
+│
+├── typings/                     # Custom type stubs
+│   └── faiss/
+│       └── __init__.pyi         # FAISS type stubs for Pyright
 │
 ├── pyproject.toml
 └── README.md
 ```
 
-## Some useful expansions
-
-```
-backend/
-├── src/
-│   └── resume_ragbot/
-│       ├── storage/             # Persistence
-│       │   ├── __init__.py
-│       │   ├── vector_store.py  # Vector DB interface
-│       │   └── document_store.py# Raw document storage
-│       │
-│       └── models/              # Domain models (Pydantic)
-│           ├── __init__.py
-│           ├── document.py
-│           ├── chunk.py
-│           └── chat.py
-```
-
 ## Module Overview
+
+### `api/`
+
+FastAPI routes for the REST API:
+- `POST /upload` - Upload a single resume
+- `POST /upload_batch` - Upload multiple resumes
+- `POST /ask` - Ask a question about uploaded resumes
+- `DELETE /clear/{collection}` - Clear a collection
+- `DELETE /clear_all` - Clear all collections
+- `DELETE /resume/{collection}/{filename}` - Remove a specific resume
+- `GET /collections` - List all collections
 
 ### `extraction/`
 
-Handles parsing different resume file formats (PDF, DOCX, plain text) into raw
-text. Each extractor implements a common interface for consistency.
+Handles parsing different resume file formats (PDF, DOCX, ODT, plain text) into
+raw text. All extractors implement the `Extractor` interface defined in `base.py`.
 
 ### `rag/`
 
 Core RAG pipeline components:
 
-- **chunking.py** - Splits extracted text into chunks for embedding
-- **embeddings.py** - Generates vector embeddings for chunks
-- **retriever.py** - Finds relevant chunks for a given query
-- **prompts.py** - Prompt templates for the LLM
+- **chunking.py** - Splits extracted text into overlapping chunks
+- **embedding.py** - Generates L2-normalized vector embeddings
+- **retriever.py** - FAISS-based vector search and retrieval
+- **prompts.py** - System prompt and QA prompt with source attribution
 
-The vector similarity search engine here is FAISS. FAISS is generally pretty
-adaptable, fast, and scalable, while ultimately simpler than engines suitable
-for very large scale applications like Chroma and Pinecode. The embeddings are
-from sentence-transformers, which should be sufficient while avoiding API costs.
-Unless GPU support becomes necessary, we can use faiss-cpu for a lighter
-dependency.
+The vector similarity search engine is FAISS (faiss-cpu). Embeddings are from
+sentence-transformers (all-MiniLM-L6-v2 by default), which avoids API costs.
 
 ### `llm/`
 
-Abstraction layer for LLM API calls. Keeps provider-specific logic isolated so
-you can swap between OpenAI, Anthropic, or local models.
+Abstraction layer for LLM API calls. Supports multiple providers:
+- Anthropic (Claude)
+- OpenAI (GPT)
+- Google (Gemini)
 
-### `storage/`
-
-Persistence layer for documents and vectors. Abstracts the vector database so
-you can swap implementations (ChromaDB, Qdrant, etc.).
+The `get_client()` factory function returns the appropriate client based on
+configuration.
 
 ### `eval/`
 
-Evaluation harness for measuring RAG quality. Runs test Q&A pairs through the
-pipeline and scores responses to catch regressions.
+Standalone evaluation harness for measuring RAG quality. Run with:
+```bash
+python -m tests.eval.runner
+```
+
+Measures source recall (did we retrieve the right documents?) and keyword recall
+(does the answer contain expected information?).
 
 ## Setup
 
